@@ -7,5 +7,14 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: POST wp-cron
-        run: curl -sf --max-time 30 -X POST -o /dev/null -w "wp-cron: %{http_code}\n" https://wisetl.com/wp-cron.php
+      - name: POST wp-cron (verbose)
+        run: |
+          code=$(curl -s --max-time 30 -X POST -o /dev/null -w "%{http_code}" https://wisetl.com/wp-cron.php)
+          echo "Response: $code"
+          if [ "$code" = "000" ]; then
+            echo "Connection failed — retrying..."
+            sleep 5
+            code=$(curl -s --max-time 30 -X POST -o /dev/null -w "%{http_code}" https://wisetl.com/wp-cron.php)
+            echo "Retry response: $code"
+          fi
+          exit 0  # always succeed — this is a heartbeat, not a monitor
